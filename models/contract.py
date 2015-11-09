@@ -73,7 +73,7 @@ class FuturesContract(Contract):
 
     def cancel(self, session):
         users_and_holdings = Holding.users_that_hold_asset(session, self.contract_asset)
-        if any(user for user, volume_sum in users_and_holdings if user != self.issuer):
+        if any(user for user, volume_sum in users_and_holdings if user is not self.issuer):
             logger.warning('Cannot cancel futures contract {} if other people hold it'.format(self.id))
             return False
 
@@ -97,7 +97,7 @@ class FuturesContract(Contract):
         self.issuer.decrease_volume_of_asset(session, self.contract_asset,
                                              self.issuer.volume_of_asset(session, self.contract_asset))
 
-        # We cannot remove the asset since we know that at least one `Holding` refer to it
+        # We cannot delete the asset since we know that at least one `Holding` refers to it
         self.contract_asset.remove(session)
 
         if not session.query(Order).count():

@@ -1,8 +1,12 @@
+import logging
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
 
 from models import Base
+
+
+logger = logging.getLogger(__file__)
 
 
 class Asset(Base):
@@ -27,6 +31,7 @@ class Asset(Base):
         self.name, self.previous_name = None, self.name
         self.removed_at = datetime.now()
         session.add(self)
+        logger.info('Added Asset instance {} for removal'.format(self.id))
 
     @property
     def removed(self):
