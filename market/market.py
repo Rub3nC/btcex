@@ -13,6 +13,15 @@ def execute(session, first_order, second_order):
         logger.error('Both arguments are not Order instances')
         raise MarketException('Both arguments are not Order instances')
 
+    if first_order.asset is None or first_order.asset != second_order.asset:
+        logger.error('Asset is None or order assets differ ({}, {})'.format(first_order.id, second_order.id))
+        raise MarketException('Asset is None or order assets differ')
+
+    if first_order.contract.contract_asset is None or\
+            first_order.contract.contract_asset != second_order.contract.contract_asset:
+        logger.error('Contract asset is None or they differ ({}, {})'.format(first_order.id, second_order.id))
+        raise MarketException('Contract asset is None or they differ')
+
     if first_order.state != OrderStateType.in_market.value or second_order.state != OrderStateType.in_market.value:
         logger.error('At least one order is not in market ({}, {})'.format(first_order.id, second_order.id))
         raise MarketException('At least one order is not in market')
@@ -85,7 +94,8 @@ def execute(session, first_order, second_order):
                               ask_order=ask_order,
                               bid_order=bid_order,
                               price=price,
-                              volume=volume)
+                              volume=volume,
+                              asset=first_order.asset)
     session.add_all([first_order, second_order, transaction])
 
     try:

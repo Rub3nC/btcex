@@ -27,3 +27,7 @@ class Asset(Base):
         self.name, self.previous_name = None, self.name
         self.removed_at = datetime.now()
         session.add(self)
+
+    @property
+    def removed(self):
+        return self.removed_at is not None

@@ -52,6 +52,11 @@ class Order(Base):
 
     @classmethod
     def create_order(cls, session, user, price, price_asset, contract, contract_volume, is_bid, order_type):
+        if price_asset.removed or contract.contract_asset.removed:
+            logger.error('Cannot create order with removed asset {}, {}'.format(price_asset.id,
+                                                                                contract.contract_asset_id))
+            return None
+
         direction = DirectionType.bid.value if is_bid else DirectionType.ask.value
         order = cls(user=user, price=price, asset=price_asset, contract=contract, volume=contract_volume,
                     direction=direction, order_type=order_type, state='Created', created_at=datetime.now())
