@@ -27,7 +27,7 @@ class User(Base):
         return user
 
     def volume_of_asset(self, session, asset):
-        current_holdings = Holding.current_holdings(session, self)
+        current_holdings = Holding.current_holdings_for_user(session, self)
         return current_holdings[asset.id]
 
     def increase_volume_of_asset(self, session, asset, volume):
@@ -70,7 +70,7 @@ class Holding(Base):
         return holding
 
     @classmethod
-    def current_holdings(cls, session, user):
+    def current_holdings_for_user(cls, session, user):
         current = session.query(Holding.asset_id, func.sum(Holding.volume).label('volume_sum'))\
             .filter(Holding.user == user).group_by(Holding.asset_id)
 

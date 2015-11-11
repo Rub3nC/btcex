@@ -31,11 +31,10 @@ class FuturesTest(unittest.TestCase):
         self.session.commit()
         Base.metadata.drop_all(bind=engine)
 
-    def test_normal_scenario(self):
+    def test_normal_scenario_with_two_users(self):
         # First create some users
         user1 = User.create_user(self.session, 'user1', 'abcd')
         user2 = User.create_user(self.session, 'user2', 'abcd')
-        user3 = User.create_user(self.session, 'user3', 'abcd')
 
         # Make sure user1 has 1 BTC for later deposit into a futures contract
         btc = Asset.create_asset('BTC')

@@ -57,6 +57,10 @@ class Order(Base):
                                                                                 contract.contract_asset_id))
             return None
 
+        if not contract.can_be_used_in_order():
+            logger.error('Tried to use an inactive contract ({}) in an order'.format(contract.id))
+            return None
+
         direction = DirectionType.bid.value if is_bid else DirectionType.ask.value
         order = cls(user=user, price=price, asset=price_asset, contract=contract, volume=contract_volume,
                     direction=direction, order_type=order_type, state='Created', created_at=datetime.now())

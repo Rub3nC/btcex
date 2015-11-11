@@ -23,7 +23,7 @@ class Contract(Base):
 
     id = Column(Integer, primary_key=True)
     created_at = Column(DateTime, nullable=False)
-    contract_type = Column(Enum('Future', 'Option', name='contract_types'), nullable=False)
+    contract_type = Column(Enum('Commodity', 'Future', name='contract_types'), nullable=False)
     issuer_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
     issuer = relationship('User', backref=backref('contracts'))
@@ -71,23 +71,26 @@ class FuturesContract(Contract):
 
         return contract, contract_asset
 
+    def can_be_used_in_order(self):
+        return not self.cancelled and not self.expired and datetime.now() <= self.expires_at
+
     def cancel(self, session):
         users_and_holdings = Holding.users_that_hold_asset(session, self.contract_asset)
         if any(user for user, volume_sum in users_and_holdings if user is not self.issuer):
-            logger.warning('Cannot cancel futures contract {} if other people hold it'.format(self.id))
+            logger.info('Cannot cancel futures contract {} if other people hold it'.format(self.id))
             return False
 
         valid_states = (OrderStateType.cancelled.value, OrderStateType.executed.value)
         if session.query(exists().where(and_(Order.contract == self, Order.state.notin_(valid_states)))).scalar():
-            logger.warning('There are orders not in state (cancelled, executed) for contract {}'.format(self.id))
+            logger.info('There are orders not in state (cancelled, executed) for contract {}'.format(self.id))
             return False
 
         if self.expired or self.expires_at < datetime.now():
-            logger.warning('The expire() method has been run or exp. date has passed for contract {}'.format(self.id))
+            logger.info('The expire() method has been run or exp. date has passed for contract {}'.format(self.id))
             return False
 
         if self.cancelled:
-            logger.warning('The contract {} has already been cancelled'.format(self.id))
+            logger.info('The contract {} has already been cancelled'.format(self.id))
             return False
 
         # Return funds that was taken for deposit
@@ -97,7 +100,7 @@ class FuturesContract(Contract):
         self.issuer.decrease_volume_of_asset(session, self.contract_asset,
                                              self.issuer.volume_of_asset(session, self.contract_asset))
 
-        # We cannot delete the asset since we know that at least one `Holding` refers to it
+        # We cannot delete the asset from database since we know that at least one `Holding` refers to it
         self.contract_asset.remove(session)
 
         if not session.query(Order).count():
@@ -120,9 +123,8 @@ class FuturesContract(Contract):
         total_volume = sum(volume_sum for _, volume_sum in users_and_holdings)
         for user, volume_sum in users_and_holdings:
             user.increase_volume_of_asset(session, self.asset, volume_sum / total_volume * self.volume)
+            logger.info('Distributed {} of asset {} to user {}'.format(volume_sum, self.asset_id, user.id))
 
         self.expired = True
         session.add(self)
         session.commit()
-        logger.info('expire(): Distributed {} {} (asset {}) to {} users'.format(total_volume, self.asset.name,
-                                                                                self.asset_id, len(users_and_holdings)))
