@@ -87,7 +87,6 @@ class Holding(Base):
 
         ret = []
         for user_id, volume_sum in all_holdings:
-            if volume_sum > 0:
-                ret.append((session.query(User).get(user_id), volume_sum))
+            ret.append((session.query(User).get(user_id), volume_sum))
 
         return ret
