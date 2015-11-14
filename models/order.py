@@ -6,7 +6,7 @@ A `limit order` is an order with a specified price and volume.
 import logging
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, Enum, DateTime, ForeignKey, Numeric, Interval, UniqueConstraint, Boolean
+from sqlalchemy import Column, Integer, Enum, DateTime, ForeignKey, Numeric, Interval, UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 
 from models import Base
