@@ -22,7 +22,6 @@ class Asset(Base):
 
     @classmethod
     def create_asset(cls, name):
-        """Strip name from spaces, etc"""
         if name is not None:
             asset = cls(name=name.strip().upper())
             return asset
