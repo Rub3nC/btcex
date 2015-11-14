@@ -133,10 +133,10 @@ class Transaction(Base):
     asset = relationship('Asset')
 
     def execute_trade(self, session):
-        """Note that we have already *decreased* the volumes when we initially created the orders"""
         if self.executed_at is not None:
             return
 
+        # Note that we have already *decreased* the volumes when we initially created the orders
         self.bid_order.user.increase_volume_of_asset(session, self.contract.contract_asset, self.volume)
         self.ask_order.user.increase_volume_of_asset(session, self.asset, self.price)
         self.executed_at = datetime.now()
