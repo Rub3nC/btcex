@@ -33,11 +33,13 @@ class User(Base):
     def increase_volume_of_asset(self, session, asset, volume):
         holding = Holding.create_holding(session, self, asset, volume)
         session.add(holding)
+        logger.info('Increased holding of asset {} for user {} with {}'.format(asset.id, self.id, volume))
         return holding
 
     def decrease_volume_of_asset(self, session, asset, volume):
         holding = Holding.create_holding(session, self, asset, -volume)
         session.add(holding)
+        logger.info('Decreased holding of asset {} for user {} with {}'.format(asset.id, self.id, volume))
         return holding
 
 
@@ -57,6 +59,7 @@ class Holding(Base):
 
     @classmethod
     def create_holding(cls, session, user, asset, volume, source='InternalTrade', description=None):
+        logger.info('Trying to increase/decrease volume in asset {} for user {}'.format(asset.id, user.id))
         if asset.removed:
             logger.warning('Tried to increase/decrease volume in a removed asset ({})'.format(asset.id))
             return None
@@ -65,8 +68,13 @@ class Holding(Base):
             logger.warning('Tried to create a holding with zero volume; aborting')
             return None
 
+        if volume < 0:
+            holdings = cls.current_holdings_for_user(session, user)
+            if holdings[asset.id] + volume < 0:
+                logger.warning('Total vol. < 0 aborting. Ass. vol. {}, delta vol {}'.format(holdings[asset.id], volume))
+                return None
+
         holding = cls(user=user, asset=asset, volume=volume, source=source, description=description)
-        session.add(holding)
         return holding
 
     @classmethod

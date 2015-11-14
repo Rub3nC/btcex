@@ -16,6 +16,7 @@ from models.consts import OrderType
 from market.market import put_order
 
 
+# We use Postgres for testing since SQLite doesn't have an INTERVAL data type
 engine = create_engine('postgres://btcex:{}@localhost:5432/btcex_test'.format(os.environ.get('BTCEX_TEST_PW')))
 Session = sessionmaker(bind=engine)
 
