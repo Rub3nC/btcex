@@ -94,9 +94,12 @@ class FuturesContract(Contract):
             return False
 
         # Return funds that was taken for deposit
-        self.issuer.increase_volume_of_asset(session, self.asset, self.volume)
+        funds = self.issuer.increase_volume_of_asset(session, self.asset, self.volume)
+        if funds is None:
+            logger.warning('Could not return funds when cancelling futures contract {}'.format(self.id))
+            return None
 
-        # Remove entire volume held in the future
+        # Remove entire volume held in the future (should always work)
         self.issuer.decrease_volume_of_asset(session, self.contract_asset,
                                              self.issuer.volume_of_asset(session, self.contract_asset))
 

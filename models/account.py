@@ -32,15 +32,23 @@ class User(Base):
 
     def increase_volume_of_asset(self, session, asset, volume):
         holding = Holding.create_holding(session, self, asset, volume)
-        session.add(holding)
-        logger.info('Increased holding of asset {} for user {} with {}'.format(asset.id, self.id, volume))
-        return holding
+        if holding is not None:
+            session.add(holding)
+            logger.info('Increased holding of asset {} for user {} with {}'.format(asset.id, self.id, volume))
+            return holding
+        else:
+            logger.warning('Could not increase holding of asset {} for user {} ({})'.format(asset.id, self.id, volume))
+            return None
 
     def decrease_volume_of_asset(self, session, asset, volume):
         holding = Holding.create_holding(session, self, asset, -volume)
-        session.add(holding)
-        logger.info('Decreased holding of asset {} for user {} with {}'.format(asset.id, self.id, volume))
-        return holding
+        if holding is not None:
+            session.add(holding)
+            logger.info('Decreased holding of asset {} for user {} with {}'.format(asset.id, self.id, volume))
+            return holding
+        else:
+            logger.warning('Could not decrease holding of asset {} for user {} ({})'.format(asset.id, self.id, volume))
+            return None
 
 
 class Holding(Base):
